@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dubbo-go-nacos
+  namespace: dubbogo-triple-nacos
+spec:
+  selector:
+    app: nacos
+  type: ClusterIP
+  ports:
+    - port: 8848
+      targetPort: 8848
+      name: nacos
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dubbogo-nacos-deployment
+  name: dubbogo-nacos-deployment
+  namespace: dubbogo-triple-nacos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nacos
+  template:
+    metadata:
+      labels:
+        app: nacos
+    spec:
+      containers:
+        - name: nacos
+          image: nacos/nacos-server:2.0.1
+          ports:
+            - containerPort: 8848
+          env:
+            - name: MODE
+              value: "standalone"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pixiu
+  name: pixiu
+  namespace: dubbogo-triple-nacos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pixiu
+  template:
+    metadata:
+      labels:
+        app: pixiu
+    spec:
+      containers:
+        - name: pixiu
+          image: laurencelizhixin/pixiu-nacos-triple:0.0.1
+          ports:
+            - containerPort: 8881
+          imagePullPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: server
+  name: server
+  namespace: dubbogo-triple-nacos
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+        - name: server
+          image: laurencelizhixin/pixiu-triple-demo-server:0.0.1
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pixiu
+  namespace: dubbogo-triple-nacos
+spec:
+  selector:
+    app: pixiu
+  type: LoadBalancer
+  ports:
+    - port: 8881
+      targetPort: 8881
+      name: nacos
